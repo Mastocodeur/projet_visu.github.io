@@ -134,7 +134,7 @@
       // Charger la carte du monde et vos données
       const world = await d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson");
       // Remplacez FileAttachment par un fetch si nécessaire ou fournissez le fichier localement
-      const geoData = await d3.json("map.geojson");
+      const geoData = await d3.json("data/map.geojson");
       
       // Correction d’orientation des polygones avec Turf
       geoData.features = geoData.features.map(f => turf.rewind(f, { reverse: true }));
@@ -253,11 +253,11 @@
   <!-- Script existant pour les autres graphiques (dans le right-container) -->
   <script>
     Promise.all([
-      d3.csv("blue_water_footprint.csv"),
-      d3.csv("blue_water_availability.csv"),
-      d3.csv("natural_runoff.csv"),
-      d3.csv("scarcity_csv.csv"),
-      d3.csv("wiki_link_bassin.csv")
+      d3.csv("data/blue_water_footprint.csv"),
+      d3.csv("data/blue_water_availability.csv"),
+      d3.csv("data/natural_runoff.csv"),
+      d3.csv("data/scarcity_csv.csv"),
+      d3.csv("data/wiki_link_bassin.csv")
     ]).then(function([footprintData, availabilityData, runoffData, scarcityData, wikiDataLoaded]) {
       wikiData = wikiDataLoaded; // Stocke les données chargées
       // Extraction de la liste des bassins

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Graphiques intégrés</title>
+  <script src="https://unpkg.com/d3@7"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .global-container {
+      width: 90%;
+      margin: auto;
+    }
+    /* Sélecteur centré */
+    #selector-container {
+      text-align: center;
+      margin: 20px 0;
+    }
+    /* Conteneur des deux graphiques en ligne */
+    #row-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: nowrap;
+    }
+    /* Chaque graphique dans le row-container occupe au moins 400px */
+    .chart-container {
+      position: relative;
+      flex: 1 1 400px;
+      margin: 10px;
+    }
+    /* Les SVG sont responsives */
+    .chart-container svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    /* Conteneur du graphique du bas */
+    #chartDiff-container {
+      max-width: 800px;
+      margin: 20px auto;
+    }
+    .info-box {
+      position: absolute;
+      background: white;
+      border: 1px solid black;
+      padding: 10px;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center">Graphiques intégrés</h1>
+  <div id="global-container">
+    <!-- Sélecteur commun -->
+    <div id="selector-container"></div>
+    <!-- Ligne pour chart6 et chart7 -->
+    <div id="row-container">
+      <div id="chart6-container" class="chart-container"></div>
+      <div id="chart7-container" class="chart-container"></div>
+    </div>
+    <!-- Graphique chartDiff centré -->
+    <div id="chartDiff-container" class="chart-container"></div>
+  </div>
+  
+  <script>
+    Promise.all([
+      d3.csv("blue_water_footprint.csv"),
+      d3.csv("blue_water_availability.csv"),
+      d3.csv("natural_runoff.csv"),
+      d3.csv("scarcity_csv.csv")
+    ]).then(function([footprintData, availabilityData, runoffData, scarcityData]) {
+      
+      // Extraction de la liste des bassins
+      const basinNames = footprintData.map(d => d.basin_name).filter(Boolean);
+      
+      // Création du sélecteur commun
+      const selectorContainer = d3.select("#selector-container");
+      const basinSelector = selectorContainer.append("select");
+      basinSelector.selectAll("option")
+        .data(basinNames)
+        .enter()
+        .append("option")
+        .attr("value", d => d)
+        .text(d => d);
+      
+      const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+      
+      // Dimensions pour la viewBox (les SVG seront redimensionnés par CSS)
+      const width = 800, height = 500;
+      const margin = { top: 60, right: 150, bottom: 50, left: 60 };
+      
+      // --- Graphique Chart6 : Empreinte, Disponibilité, Runoff ---
+      function updateChart6(basinName) {
+        const container = d3.select("#chart6-container");
+        container.html("");
+        const svg = container.append("svg")
+          .attr("viewBox", `0 0 ${width} ${height}`)
+          .attr("preserveAspectRatio", "xMidYMid meet");
+        
+        const footRow = footprintData.find(d => d.basin_name === basinName);
+        const availRow = availabilityData.find(d => d.basin_name === basinName);
+        const runRow = runoffData.find(d => d.basin_name === basinName);
+        
+        // Pour l'empreinte, on divise par 1e3
+        const footprint = months.map(m => (+footRow?.[m] || 0) / 1e3);
+        const availability = months.map(m => +availRow?.[m] || 0);
+        const runoff = months.map(m => +runRow?.[m] || 0);
+        const allValues = footprint.concat(availability, runoff);
+        const yMax = d3.max(allValues);
+        
+        const x = d3.scalePoint()
+          .domain(months)
+          .range([margin.left, width - margin.right - 100]);
+        const y = d3.scaleLinear()
+          .domain([0, yMax]).nice()
+          .range([height - margin.bottom, margin.top]);
+        
+        svg.append("g")
+          .attr("transform", `translate(0,${height - margin.bottom})`)
+          .call(d3.axisBottom(x));
+        svg.append("g")
+          .attr("transform", `translate(${margin.left},0)`)
+          .call(d3.axisLeft(y));
+        
+        const legend = svg.append("g")
+          .attr("transform", `translate(${width - margin.right + 10},50)`);
+        const colors = { footprint: "steelblue", availability: "green", runoff: "orange" };
+        Object.keys(colors).forEach((key, i) => {
+          legend.append("rect")
+            .attr("x", 0)
+            .attr("y", i * 20)
+            .attr("width", 12)
+            .attr("height", 12)
+            .attr("fill", colors[key]);
+          legend.append("text")
+            .attr("x", 20)
+            .attr("y", i * 20 + 10)
+            .attr("font-size", "12px")
+            .text(key.charAt(0).toUpperCase() + key.slice(1));
+        });
+        
+        const line = d3.line()
+          .x((d, i) => x(months[i]))
+          .y(d => y(d));
+        
+        svg.append("path")
+          .datum(footprint)
+          .attr("fill", "none")
+          .attr("stroke", colors.footprint)
+          .attr("stroke-width", 2)
+          .attr("d", line);
+        
+        svg.append("path")
+          .datum(availability)
+          .attr("fill", "none")
+          .attr("stroke", colors.availability)
+          .attr("stroke-width", 2)
+          .attr("d", line);
+        
+        svg.append("path")
+          .datum(runoff)
+          .attr("fill", "none")
+          .attr("stroke", colors.runoff)
+          .attr("stroke-width", 2)
+          .attr("d", line);
+      }
+      
+      // --- Graphique Chart7 : Scarcity ---
+      function updateChart7(basinName) {
+        const container = d3.select("#chart7-container");
+        container.html("");
+        container.append("h2")
+          .style("text-align", "center")
+          .text("Graphique de la Scarcity");
+        const svg = container.append("svg")
+          .attr("viewBox", `0 0 ${width} ${height}`)
+          .attr("preserveAspectRatio", "xMidYMid meet");
+        
+        const basinEntry = scarcityData.find(d => d.basin_name === basinName);
+        const values = months.map(m => parseFloat(basinEntry?.[m]) || 0);
+        const population = basinEntry?.population || "N/A";
+        
+        container.append("div")
+          .attr("class", "info-box")
+          .style("left", (width - margin.right) + "px")
+          .style("top", "80px")
+          .html(`<strong>${basinName}</strong><br>Population: ${population}`);
+        
+        const x = d3.scalePoint()
+          .domain(months)
+          .range([margin.left, width - margin.right - 150]);
+        const y = d3.scaleLinear()
+          .domain([0, d3.max(values)]).nice()
+          .range([height - margin.bottom, margin.top]);
+        
+        svg.append("g")
+          .attr("transform", `translate(0,${height - margin.bottom})`)
+          .call(d3.axisBottom(x));
+        svg.append("g")
+          .attr("transform", `translate(${margin.left},0)`)
+          .call(d3.axisLeft(y));
+        
+        const line = d3.line()
+          .x((d, i) => x(months[i]))
+          .y(d => y(d));
+        
+        svg.append("path")
+          .datum(values)
+          .attr("fill", "none")
+          .attr("stroke", "red")
+          .attr("stroke-width", 2)
+          .attr("d", line);
+        
+        svg.selectAll(".point")
+          .data(values)
+          .enter()
+          .append("circle")
+          .attr("class", "point")
+          .attr("r", 4)
+          .attr("cx", (d, i) => x(months[i]))
+          .attr("cy", d => y(d))
+          .attr("fill", "red");
+      }
+      
+      // --- Graphique ChartDiff : Différence (availability - footprint) ---
+      function updateChartDiff(basinName) {
+        const container = d3.select("#chartDiff-container");
+        container.html("");
+        const svg = container.append("svg")
+          .attr("viewBox", `0 0 ${width} ${height}`)
+          .attr("preserveAspectRatio", "xMidYMid meet");
+        
+        const footRow = footprintData.find(d => d.basin_name === basinName);
+        const availRow = availabilityData.find(d => d.basin_name === basinName);
+        const diff = months.map(m => {
+          const footVal = +footRow?.[m] || 0;
+          const availVal = +availRow?.[m] || 0;
+          return availVal - footVal;
+        });
+        
+        function areaUnderCurve(values) {
+          let sum = 0;
+          for (let i = 0; i < values.length - 1; i++) {
+            sum += (values[i] + values[i+1]) / 2;
+          }
+          return sum;
+        }
+        const approxArea = areaUnderCurve(diff);
+        
+        container.append("div")
+          .attr("class", "info-box")
+          .style("left", (width/2) + "px")
+          .style("top", "10px")
+          .html(`<strong>${basinName}</strong><br>Aire sous la courbe (approx) : ${approxArea.toFixed(2)}`);
+        
+        const x = d3.scalePoint()
+          .domain(months)
+          .range([margin.left, width - margin.right - 100]);
+        const y = d3.scaleLinear()
+          .domain([d3.min(diff), d3.max(diff)]).nice()
+          .range([height - margin.bottom, margin.top]);
+        
+        svg.append("g")
+          .attr("transform", `translate(0,${height - margin.bottom})`)
+          .call(d3.axisBottom(x))
+          .append("text")
+            .attr("x", (width - margin.left - margin.right) / 2 + margin.left)
+            .attr("y", 35)
+            .attr("text-anchor", "middle")
+            .attr("font-size", "14px")
+            .attr("fill", "black")
+            .text("Disponibilité mensuelle");
+        svg.append("g")
+          .attr("transform", `translate(${margin.left},0)`)
+          .call(d3.axisLeft(y));
+        
+        const line = d3.line()
+          .x((d, i) => x(months[i]))
+          .y(d => y(d));
+        const area = d3.area()
+          .x((d, i) => x(months[i]))
+          .y0(() => y(0))
+          .y1(d => y(d));
+        
+        svg.append("path")
+          .datum(diff)
+          .attr("fill", "rgba(255,0,0,0.2)")
+          .attr("d", area);
+        svg.append("path")
+          .datum(diff)
+          .attr("fill", "none")
+          .attr("stroke", "red")
+          .attr("stroke-width", 2)
+          .attr("d", line);
+      }
+      
+      // Mise à jour globale des graphiques lors du changement de bassin
+      function updateCharts(basinName) {
+        updateChart6(basinName);
+        updateChart7(basinName);
+        updateChartDiff(basinName);
+      }
+      
+      basinSelector.on("change", function() {
+        updateCharts(this.value);
+      });
+      
+      // Affichage initial avec le premier bassin
+      updateCharts(basinNames[0]);
+      
+    }).catch(function(error) {
+      console.error("Erreur lors du chargement des CSV :", error);
+    });
+  </script>
+</body>
+</html>

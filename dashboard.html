@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Graphique de la Scarcity</title>
+    <!-- Import de D3.js (version 7) -->
+    <script src="https://unpkg.com/d3@7"></script>
+
+    <!-- Un peu de style (optionnel) -->
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      .chart-container {
+        position: relative;
+        width: 800px; /* Facultatif si on veut fixer la taille */
+        margin: 20px auto;
+      }
+      .info-box {
+        border: 1px solid black;
+        padding: 10px;
+        position: absolute;
+        background: white;
+      }
+      .point {
+        fill: red;
+      }
+    </style>
+  </head>
+  <body>
+    <h2 style="text-align:center">Graphique de la Scarcity</h2>
+    <!-- Conteneur principal -->
+    <div class="chart-container" id="chart-container"></div>
+
+    <script>
+    // On charge les données avec d3.csv (sans FileAttachment)
+    d3.csv("scarcity_csv.csv").then(function(scarcityData) {
+      // 1. Filtrer et préparer la liste des noms de bassin
+      const validBasins = scarcityData.filter(d => d.basin_name);
+      const basinNames = validBasins.map(d => d.basin_name);
+
+      // 2. Dimensions du SVG
+      const width = 800;
+      const height = 500;
+      const margin = { top: 60, right: 200, bottom: 50, left: 60 };
+
+      // 3. Les mois
+      const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+      // 4. Insertion d'un menu <select> dans la page
+      const container = d3.select("#chart-container");
+
+      // Ajout du <select>
+      const basinSelector = container.append("select");
+      basinSelector
+        .selectAll("option")
+        .data(basinNames)
+        .enter()
+        .append("option")
+        .attr("value", d => d)
+        .text(d => d);
+
+      // 5. Création du <svg>
+      const svg = container
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+      // 6. Boîte d'info (population, etc.)
+      const infoBox = container
+        .append("div")
+        .attr("class", "info-box")
+        .style("left", (width - 180) + "px")
+        .style("top", "80px");
+
+      // 7. Échelles X et Y
+      const x = d3.scalePoint()
+        .domain(months)
+        .range([margin.left, width - margin.right - 150]);
+
+      const y = d3.scaleLinear()
+        .range([height - margin.bottom, margin.top]);
+
+      const xAxis = svg.append("g")
+        .attr("transform", `translate(0,${height - margin.bottom})`);
+
+      const yAxis = svg.append("g")
+        .attr("transform", `translate(${margin.left},0)`);
+
+      // 8. Fonction utilitaire pour extraire data
+      function getBasinData(basinName) {
+        const basinEntry = validBasins.find(d => d.basin_name === basinName);
+        return {
+          // Convertir en nombres (parseFloat, déjà fait si d3.csv parse bien le CSV)
+          values: months.map(m => parseFloat(basinEntry?.[m]) || 0),
+          population: basinEntry?.population || "N/A"
+        };
+      }
+
+      // 9. Fonction de mise à jour
+      function updateChart(basinName) {
+        const { values, population } = getBasinData(basinName);
+
+        // Domaine Y : 0 -> max
+        y.domain([0, d3.max(values)]).nice();
+
+        xAxis.call(d3.axisBottom(x));
+        yAxis.call(d3.axisLeft(y));
+
+        infoBox.html(`<strong>${basinName}</strong><br>Population: ${population}`);
+
+        // Générateur de lignes
+        const lineGenerator = d3.line()
+          .x((_, i) => x(months[i]))
+          .y(d => y(d));
+
+        // Lignes
+        const path = svg.selectAll(".scarcity").data([values]);
+        path.enter().append("path")
+          .attr("class", "scarcity")
+          .merge(path)
+          .attr("fill", "none")
+          .attr("stroke", "red")
+          .attr("stroke-width", 2)
+          .attr("d", lineGenerator);
+
+        // Points
+        const points = svg.selectAll(".point").data(values);
+        points.enter().append("circle")
+          .attr("class", "point")
+          .merge(points)
+          .attr("r", 4)
+          .attr("cx", (_, i) => x(months[i]))
+          .attr("cy", d => y(d));
+      }
+
+      // 10. Sur changement de bassin
+      basinSelector.on("change", function() {
+        updateChart(this.value);
+      });
+
+      // 11. Tracé initial
+      updateChart(basinNames[0]);
+    });
+    </script>
+  </body>
+</html>

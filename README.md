@@ -29,17 +29,37 @@ Avec un simple clic droit sur le code html, puis en cliquant sur "Open with Live
 
 ## Notre visualisation
 
-Vous pouvez accéder à notre visualisation en cliquant sur ce lien  :https://mastocodeur.github.io/projet_visu.github.io/
+Vous pouvez accéder à notre visualisation en cliquant sur ce lien : https://mastocodeur.github.io/projet_visu.github.io/
+
+
+Notre site contient 3 pages :
+- Une page d'acceuil
+- Une page de présentation du projet
+- Une page dashboard contenant la visualisation du jeu de données
+
+
+Voici ce que vous devriez normalement voir : 
+
+La page d'acceuil : 
+![Acceuil du site](images/acceuil.jpg)
+
+La page de présentation du projet :
+![Présenation du projet](images/presentation.jpg)
+
+
+La page de visualisation : 
+![Dashboard](images/dashboard.jpg)
+
 
 
 
 ## Sources 
 
 Provenance de notre jeu de données : 
+- https://mrb.grdc.bafg.de/
+- https://www.waterfootprint.org/resources/Report53-GlobalBlueWaterScarcity.pdf
 - https://www.kaggle.com/datasets/mpwolke/cusersmarildownloadsscarcitycsv
-
 - https://www.waterfootprint.org/publications/
-
 
 
 Pour apprendre à utiliser Github Pages : 

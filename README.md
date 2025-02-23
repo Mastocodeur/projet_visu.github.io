@@ -14,8 +14,9 @@ Il a fallu dans un premier temps trouvé un jeu de données, puis dans un second
 
 ## Les outils
 
-Pour réaliser ce projet et pouvoir le partager nous avons principalement utilisé deux outils : 
+Pour réaliser ce projet et pouvoir le partager nous avons utilisé les outils suivant : 
 
+- Observable (https://observablehq.com/)
 - Live Server
 - Github Pages
 

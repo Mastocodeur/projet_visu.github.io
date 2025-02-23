@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Présentation du Projet</title>
+  <link rel="icon" type="image/jpeg" href="images/logo_eau.jpg">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap');
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+      color: white;
+      text-align: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      text-align: justify;
+    }
+    h1, h2 {
+      text-align: center;
+      color: white;
+    }
+    .button-container {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 20px;
+    }
+    .button {
+      background-color: white;
+      color: #007BFF;
+      padding: 12px 25px;
+      margin: 5px;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 25px;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease-in-out;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+    .button:hover {
+      background-color: #007BFF;
+      color: white;
+    }
+    .button.active {
+      background-color: #0056b3;
+      color: white;
+      cursor: default;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    ul li::before {
+      content: '\2022';
+      color: white;
+      font-weight: bold;
+      display: inline-block;
+      width: 1em;
+      margin-left: -1em;
+    }
+  </style>
+</head>
+<body>
+  <div class="button-container">
+    <a href="index.html" class="button">Accueil</a>
+    <a href="presentation.html" class="button active">Présentation du Projet</a>
+    <a href="dashboard.html" class="button">Dashboard</a>
+  </div>
+
+  <div class="container">
+    <h1>Présentation du Projet</h1>
+    <h2>1) Jeu de données et problématique</h2>
+    <p>
+      Nous avons choisi de traiter la problématique de la rareté de l'eau en comparant les ressources disponibles aux besoins humains.
+    </p>
+    <p>
+      Pour cela, nous utilisons un jeu de données créé par l’UNESCO-IHE, associé à la publication 
+      <i>"Value of Water Report: 53: Global Water Scarcity: The Monthly Blue Water Footprint Compared to Blue Water Availability for the World’s Major River Basins"</i>
+      disponible sur le site : <a href="https://waterfootprint.org/publications" target="_blank" style="color: white; text-decoration: underline;">waterfootprint.org/publications</a>.
+    </p>
+    <p>
+      Le jeu de données original est un fichier .dbf, associé à un fichier .shp pour les données géographiques. Il contient, pour chaque mois, 
+      les valeurs de rareté de l’eau bleue, accompagnées des données nécessaires à leur calcul, à savoir :
+    </p>
+    <ul>
+      <li><strong>Disponibilité de l’eau bleue</strong> (Blue water availability) = Débit naturel – Exigences en flux environnementaux</li>
+      <li><strong>Rareté de l’eau bleue</strong> (Blue water scarcity) = Empreinte de l’eau bleue / Disponibilité de l’eau bleue, où l’empreinte représente la consommation humaine d’eau.</li>
+    </ul>
+    <p>
+      Pour simplifier l’exploration des données et en attendant le cours sur l’affichage des données géographiques, nous travaillons ici avec un fichier .csv.
+    </p>
+  </div>
+</body>
+</html>

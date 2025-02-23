@@ -1,0 +1,39 @@
+<div id="top-buttons" style="text-align:center; padding: 10px; background-color: #f0f0f0;">
+    <button onclick="window.location.href='presentation.html'" class="nav-button">
+        Présentation du Projet
+    </button>
+    <button onclick="window.location.href='dashboard.html'" class="nav-button">
+        Dashboard
+    </button>
+</div>
+
+<style>
+    #top-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        padding: 15px;
+        background: #3498db;
+    }
+
+    .nav-button {
+        background: white;
+        border: 2px solid #2980b9;
+        color: #2980b9;
+        font-size: 16px;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-radius: 5px;
+    }
+
+    .nav-button:hover {
+        background: #2980b9;
+        color: white;
+    }
+
+    .active {
+        background: #2980b9;
+        color: white;
+    }
+</style>

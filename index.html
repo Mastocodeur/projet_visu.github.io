@@ -60,6 +60,8 @@
 </head>
 <body>
   <h1 style="text-align:center">Rareté et pénurie de l'eau bleue</h1>
+  <!-- Nouveau conteneur pour le lien Wikipédia -->
+  <div id="wiki-link" style="text-align:center; margin-bottom:20px;"></div>
   <div id="global-container">
     <!-- Partie gauche  -->
     <div id="left-container"></div>
@@ -232,9 +234,10 @@
       d3.csv("blue_water_footprint.csv"),
       d3.csv("blue_water_availability.csv"),
       d3.csv("natural_runoff.csv"),
-      d3.csv("scarcity_csv.csv")
-    ]).then(function([footprintData, availabilityData, runoffData, scarcityData]) {
-      
+      d3.csv("scarcity_csv.csv"),
+      d3.csv("wiki_link_bassin.csv")
+    ]).then(function([footprintData, availabilityData, runoffData, scarcityData, wikiDataLoaded]) {
+      wikiData = wikiDataLoaded; // Stocke les données chargées
       // Extraction de la liste des bassins
       const basinNames = footprintData.map(d => d.basin_name).filter(Boolean);
       
@@ -245,6 +248,14 @@
       const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
       const width = 800, height = 500;
       const margin = { top: 60, right: 150, bottom: 50, left: 60 };
+
+      // Fonction pour mettre à jour le lien Wikipédia en fonction du bassin
+      function updateWikipediaLink(basinName) {
+        const wikiContainer = document.getElementById("wiki-link");
+        const wikiEntry = wikiData.find(d => d.basin_name.trim().toLowerCase() === basinName.trim().toLowerCase());
+        const url = wikiEntry ? wikiEntry.wikipedia_link : "#";
+        wikiContainer.innerHTML = `<a href="${url}" target="_blank">Page Wikipedia de ${basinName}</a>`;
+      }
       
       // Fonctions de mise à jour des graphiques (chart6, chart7, chartDiff)
       function updateChart6(basinName) {
@@ -511,6 +522,7 @@
         updateChart6(basinName);
         updateChart7(basinName);
         updateChartDiff(basinName);
+        updateWikipediaLink(basinName);
         window.updateCharts = updateCharts;
 
       }

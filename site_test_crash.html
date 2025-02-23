@@ -237,8 +237,9 @@
       d3.csv("blue_water_footprint.csv"),
       d3.csv("blue_water_availability.csv"),
       d3.csv("natural_runoff.csv"),
-      d3.csv("scarcity_csv.csv")
-    ]).then(function([footprintData, availabilityData, runoffData, scarcityData]) {
+      d3.csv("scarcity_csv.csv"),
+      d3.csv("wiki_link_bassin.csv")
+    ]).then(function([footprintData, availabilityData, runoffData, scarcityData, wikiData]) {
       
       // Extraction de la liste des bassins
       const basinNames = footprintData.map(d => d.basin_name).filter(Boolean);
@@ -247,11 +248,11 @@
       const width = 800, height = 500;
       const margin = { top: 60, right: 150, bottom: 50, left: 60 };
       
-      // Fonction pour mettre à jour le lien Wikipédia en fonction du bassin (avec "rivière" dans la recherche)
+      // Fonction pour mettre à jour le lien Wikipédia en fonction du bassin
       function updateWikipediaLink(basinName) {
         const wikiContainer = document.getElementById("wiki-link");
-        const query = basinName + " rivière";
-        const url = "https://fr.wikipedia.org/w/index.php?search=" + encodeURIComponent(query);
+        const wikiEntry = wikiData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase());
+        const url = wikiEntry ? wikiEntry.wikipedia_link : "#";
         wikiContainer.innerHTML = `<a href="${url}" target="_blank">Page Wikipedia de ${basinName}</a>`;
       }
       
@@ -461,7 +462,7 @@
         updateChart6(basinName);
         updateChart7(basinName);
         updateChartDiff(basinName);
-        // Mise à jour du lien Wikipédia associé (avec "rivière")
+        // Mise à jour du lien Wikipédia associé
         updateWikipediaLink(basinName);
         window.updateCharts = updateCharts;
       }

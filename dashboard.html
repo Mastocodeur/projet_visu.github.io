@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Barissin</title>
-  <link rel="icon" type="image/jpeg" href="logo_eau.jpg">
+  <link rel="icon" type="image/jpeg" href="images/logo_eau.jpg">
   <script src="https://unpkg.com/d3@7"></script>
   <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
   <style>
@@ -256,7 +256,7 @@
       const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
       const width = 800, height = 500;
       const margin = { top: 60, right: 150, bottom: 50, left: 60 };
-
+  
       function updateWikipediaLink(basinName) {
         const wikiContainer = document.getElementById("wiki-link");
         const wikiEntry = wikiData.find(d => d.basin_name.trim().toLowerCase() === basinName.trim().toLowerCase());
@@ -269,7 +269,7 @@
         container.html("");
         container.append("div")
           .attr("class", "chart-title")
-          .text("Eau bleu");
+          .text("Ressources et besoins en eau bleu");
         const svg = container.append("svg")
           .attr("viewBox", `0 0 ${width} ${height}`)
           .attr("preserveAspectRatio", "xMidYMid meet");
@@ -281,20 +281,34 @@
         const runoff = months.map(m => +runRow?.[m] || 0);
         const allValues = footprint.concat(availability, runoff);
         const yMax = d3.max(allValues);
+
+        const marginGraphRessources = { top: 60, right: 150, bottom: 50, left: 120 };
         const x = d3.scalePoint()
           .domain(months)
-          .range([margin.left, width - margin.right - 100]);
+          .range([marginGraphRessources.left, width - marginGraphRessources.right - 100]);
         const y = d3.scaleLinear()
           .domain([0, yMax]).nice()
-          .range([height - margin.bottom, margin.top]);
+          .range([height - marginGraphRessources.bottom, marginGraphRessources.top]);
+        
         svg.append("g")
-          .attr("transform", `translate(0,${height - margin.bottom})`)
+          .attr("transform", `translate(0,${height - marginGraphRessources.bottom})`)
           .call(d3.axisBottom(x));
+        
         svg.append("g")
-          .attr("transform", `translate(${margin.left},0)`)
+          .attr("transform", `translate(${marginGraphRessources.left},0)`)
           .call(d3.axisLeft(y));
+        
+        svg.append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", marginGraphRessources.left - 80)
+          .attr("x", -height/2)
+          .attr("dy", "1em")
+          .style("text-anchor", "middle")
+          .style("font-size", "12px")
+          .text("M m³");
+        
         const legend = svg.append("g")
-          .attr("transform", `translate(${width - margin.right + 10},50)`);
+          .attr("transform", `translate(${width - marginGraphRessources.right + 10},50)`);
         const colors = { footprint: "steelblue", availability: "green", runoff: "orange" };
         Object.keys(colors).forEach((key, i) => {
           legend.append("rect")
@@ -386,7 +400,7 @@
         container.html("");
         container.append("div")
           .attr("class", "chart-title")
-          .text("Surplus et pénurie");
+          .text("Disponibilité de l’eau bleue");
         const svg = container.append("svg")
           .attr("viewBox", `0 0 ${width} ${height}`)
           .attr("preserveAspectRatio", "xMidYMid meet");
@@ -404,19 +418,26 @@
         const x = d3.scalePoint()
           .domain(months)
           .range([margin.left, width - margin.right - 100]);
+        
         svg.append("g")
           .attr("transform", `translate(0,${height - margin.bottom})`)
           .call(d3.axisBottom(x))
-          .append("text")
-            .attr("x", (width - margin.left - margin.right) / 2 + margin.left)
-            .attr("y", 35)
-            .attr("text-anchor", "middle")
-            .attr("font-size", "14px")
-            .attr("fill", "black")
-            .text("Disponibilité mensuelle");
+
+        
         svg.append("g")
           .attr("transform", `translate(${margin.left},0)`)
           .call(d3.axisLeft(y));
+        
+        // Ajout du label sur l'axe vertical pour l'unité
+        svg.append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", margin.left - 50)
+          .attr("x", -height/2)
+          .attr("dy", "1em")
+          .style("text-anchor", "middle")
+          .style("font-size", "12px")
+          .text("M m³");
+        
         svg.append("line")
           .attr("x1", margin.left)
           .attr("x2", width - margin.right)
@@ -425,6 +446,7 @@
           .attr("stroke", "black")
           .attr("stroke-width", 1)
           .attr("stroke-dasharray", "4,2");
+        
         const area = d3.area()
           .x((d, i) => x(months[i]))
           .y0(y(0))
@@ -473,7 +495,7 @@
         container.append("div")
           .attr("class", "info-box")
           .style("left", (width/2) + "px")
-          .style("top", "10px")
+          .style("top", "60px")
           .html(`<strong>${basinName}</strong><br>Aire sous la courbe (approx) : ${approxArea.toFixed(2)}`);
       }
       

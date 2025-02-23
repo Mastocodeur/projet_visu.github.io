@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>Barissin</title>
   <script src="https://unpkg.com/d3@7"></script>
+  <!-- N'oubliez pas d'inclure Turf si besoin -->
+  <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -17,7 +19,7 @@
       width: 100%;
       height: 100vh; /* occupe toute la hauteur de la fenêtre */
     }
-    /* Partie gauche (personnalisable) */
+    /* Partie gauche */
     #left-container {
       flex: 1;
       background-color: #f5f5f5;
@@ -25,7 +27,7 @@
       align-items: center;
       justify-content: center;
     }
-    /* Partie droite : contient les graphiques en cascade */
+    /* Partie droite */
     #right-container {
       flex: 1;
       padding: 20px;
@@ -57,13 +59,11 @@
   </style>
 </head>
 <body>
-  <h1 style="text-align:center">Rareté de l'eau</h1>
+  <h1 style="text-align:center">Rareté et pénurie de l'eau bleue</h1>
   <div id="global-container">
-    <!-- Colonne gauche  -->
-    <div id="left-container">
-      <p>Contenu de la partie gauche</p>
-    </div>
-    <!-- Colonne droite : sélecteur et graphiques en cascade -->
+    <!-- Partie gauche  -->
+    <div id="left-container"></div>
+    <!-- Partie droite : sélecteur et autres graphiques -->
     <div id="right-container">
       <!-- Sélecteur commun -->
       <div id="selector-container"></div>
@@ -75,7 +75,160 @@
       <div id="chartDiff-container" class="chart-container"></div>
     </div>
   </div>
-  
+
+  <!-- Script pour insérer le graphique dans la partie gauche -->
+  <script type="module">
+    // Pour émuler la fonction 'html' d'Observable (très simple)
+    const html = (strings, ...values) => {
+      const template = document.createElement("template");
+      template.innerHTML = String.raw({ raw: strings }, ...values);
+      return template.content.firstElementChild;
+    };
+
+    // Votre graphique Observable, adapté pour le web classique
+    async function createMap10() {
+      const width = 960, height = 500;
+      
+      // Créer le conteneur qui regroupe le menu déroulant et la carte
+      const container = html`
+        <div style="width: ${width}px;">
+          <!-- Menu déroulant pour sélectionner une zone -->
+          <select id="drainage-select" style="
+              width: ${width}px;
+              height: 40px;
+              font-size: 16px;
+              margin-bottom: 5px;
+          ">
+            <option value="all">-- SELECT ALL --</option>
+          </select>
+          <!-- La carte (SVG) -->
+          <svg width="${width}" height="${height}"></svg>
+        </div>
+      `;
+      
+      const selectEl = container.querySelector("#drainage-select");
+      const svg = d3.select(container).select("svg");
+      
+      // Charger la carte du monde et vos données
+      const world = await d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson");
+      // Remplacez FileAttachment par un fetch si nécessaire ou fournissez le fichier localement
+      const geoData = await d3.json("map.geojson");
+      
+      // Correction d’orientation des polygones avec Turf
+      geoData.features = geoData.features.map(f => turf.rewind(f, { reverse: true }));
+      
+      // Calculer les zones distinctes (DRAINAGE) et les trier
+      const drainageZones = Array.from(new Set(geoData.features.map(d => d.properties.DRAINAGE))).sort();
+      drainageZones.forEach(zone => {
+        const option = document.createElement("option");
+        option.value = zone;
+        option.textContent = zone;
+        selectEl.appendChild(option);
+      });
+      
+      // Combiner les données pour ajuster la projection
+      const combined = {
+        type: "FeatureCollection",
+        features: [...world.features, ...geoData.features]
+      };
+      
+      // Définir la projection Natural Earth et ajuster sa taille
+      const projection = d3.geoNaturalEarth1();
+      projection.fitSize([width, height], combined);
+      const path = d3.geoPath().projection(projection);
+      
+      // Dessiner le fond de carte
+      const gBackground = svg.append("g").attr("class", "background-map");
+      gBackground.selectAll("path")
+        .data(world.features)
+        .join("path")
+        .attr("d", path)
+        .attr("fill", "#eeeeee")
+        .attr("stroke", "#999999")
+        .attr("stroke-width", 0.5);
+      
+      // Échelle de couleur pour vos données
+      const colorScale = d3.scaleQuantize()
+        .domain(d3.extent(geoData.features, d => d.properties.Wsavg))
+        .range(["#28a2b7", "#432c39"]);
+      
+      // Groupe pour dessiner les polygones de vos données
+      const gData = svg.append("g").attr("class", "map-layer");
+      
+      gData.selectAll("path")
+        .data(geoData.features)
+        .join("path")
+        .attr("d", path)
+        .attr("fill", d => colorScale(d.properties.Wsavg || 0))
+        .attr("stroke", "#ccc")
+        .attr("stroke-width", 0.5)
+        .on("mouseenter", function(event, d) {
+          if (selectEl.value === "all") {
+            gData.selectAll("path")
+              .style("opacity", f => f === d ? 1 : 0.2);
+          }
+          tooltip
+            .style("visibility", "visible")
+            .text(`Wsavg : ${d.properties.Wsavg}`);
+        })
+        .on("mouseleave", function() {
+          if (selectEl.value === "all") {
+            gData.selectAll("path").style("opacity", 1);
+          }
+          tooltip.style("visibility", "hidden");
+        })
+        .on("click", function(event, d) {
+          const zone = d.properties.DRAINAGE || "all";
+          selectEl.value = zone;
+          updateSelection(zone);
+        });
+      
+      // Ajouter un tooltip dans le SVG
+      const tooltip = svg.append("text")
+        .attr("class", "tooltip")
+        .style("font-family", "sans-serif")
+        .style("font-size", "12px")
+        .style("pointer-events", "none")
+        .style("visibility", "hidden");
+      
+      // Zoom et Pan
+      const zoom = d3.zoom()
+        .scaleExtent([1, 8])
+        .on("zoom", event => {
+          gBackground.attr("transform", event.transform);
+          gData.attr("transform", event.transform);
+        });
+      svg.call(zoom);
+      
+      // Fonction de mise à jour de la sélection
+      function updateSelection(selectedZone) {
+        if (selectedZone === "all" || selectedZone === "") {
+          gData.selectAll("path").style("opacity", 1);
+        } else {
+          gData.selectAll("path")
+            .style("opacity", d => d.properties.DRAINAGE === selectedZone ? 1 : 0.2);
+          updateCharts(selectedZone.replace(/ RIVER$/i, ""));
+        }
+      }
+      
+      // Mettre à jour la sélection lors du changement dans le menu déroulant
+      selectEl.addEventListener("change", function() {
+        updateSelection(this.value);
+      });
+      
+      return container;
+    }
+
+    // Appel de la fonction pour créer et insérer la carte dans le left-container
+    (async () => {
+      const mapContainer = await createMap10();
+      const leftContainer = document.getElementById("left-container");
+      leftContainer.innerHTML = ""; // Effacer le contenu existant
+      leftContainer.appendChild(mapContainer);
+    })();
+  </script>
+
+  <!-- Script existant pour les autres graphiques (dans le right-container) -->
   <script>
     Promise.all([
       d3.csv("blue_water_footprint.csv"),
@@ -89,21 +242,13 @@
       
       // Création du sélecteur commun
       const selectorContainer = d3.select("#selector-container");
-      const basinSelector = selectorContainer.append("select");
-      basinSelector.selectAll("option")
-        .data(basinNames)
-        .enter()
-        .append("option")
-        .attr("value", d => d)
-        .text(d => d);
+      //const basinSelector = selectorContainer.append("select");
       
       const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-      
-      // Dimensions pour la viewBox (les SVG seront redimensionnés par CSS)
       const width = 800, height = 500;
       const margin = { top: 60, right: 150, bottom: 50, left: 60 };
       
-      // --- Graphique Chart6 : Empreinte, Disponibilité, Runoff ---
+      // Fonctions de mise à jour des graphiques (chart6, chart7, chartDiff)
       function updateChart6(basinName) {
         const container = d3.select("#chart6-container");
         container.html("");
@@ -111,11 +256,13 @@
           .attr("viewBox", `0 0 ${width} ${height}`)
           .attr("preserveAspectRatio", "xMidYMid meet");
         
-        const footRow = footprintData.find(d => d.basin_name === basinName);
-        const availRow = availabilityData.find(d => d.basin_name === basinName);
-        const runRow = runoffData.find(d => d.basin_name === basinName);
+        const footRow = footprintData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase()
+);
+        const availRow = availabilityData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase()
+);
+        const runRow = runoffData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase()
+);
         
-        // Pour l'empreinte, on divise par 1e3
         const footprint = months.map(m => (+footRow?.[m] || 0) / 1e3);
         const availability = months.map(m => +availRow?.[m] || 0);
         const runoff = months.map(m => +runRow?.[m] || 0);
@@ -179,7 +326,6 @@
           .attr("d", line);
       }
       
-      // --- Graphique Chart7 : Scarcity ---
       function updateChart7(basinName) {
         const container = d3.select("#chart7-container");
         container.html("");
@@ -190,7 +336,8 @@
           .attr("viewBox", `0 0 ${width} ${height}`)
           .attr("preserveAspectRatio", "xMidYMid meet");
         
-        const basinEntry = scarcityData.find(d => d.basin_name === basinName);
+        const basinEntry = scarcityData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase()
+);
         const values = months.map(m => parseFloat(basinEntry?.[m]) || 0);
         const population = basinEntry?.population || "N/A";
         
@@ -236,7 +383,6 @@
           .attr("fill", "red");
       }
       
-      // --- Graphique ChartDiff : Différence (availability - footprint) ---
       function updateChartDiff(basinName) {
         const container = d3.select("#chartDiff-container");
         container.html("");
@@ -244,8 +390,10 @@
           .attr("viewBox", `0 0 ${width} ${height}`)
           .attr("preserveAspectRatio", "xMidYMid meet");
         
-        const footRow = footprintData.find(d => d.basin_name === basinName);
-        const availRow = availabilityData.find(d => d.basin_name === basinName);
+        const footRow = footprintData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase()
+);
+        const availRow = availabilityData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase()
+);
         const diff = months.map(m => {
           const footVal = +footRow?.[m] || 0;
           const availVal = +availRow?.[m] || 0;
@@ -308,16 +456,17 @@
           .attr("d", line);
       }
       
-      // Mise à jour globale des graphiques lors du changement de bassin
       function updateCharts(basinName) {
         updateChart6(basinName);
         updateChart7(basinName);
         updateChartDiff(basinName);
+        window.updateCharts = updateCharts;
+
       }
       
-      basinSelector.on("change", function() {
-        updateCharts(this.value);
-      });
+      //basinSelector.on("change", function() {
+      //  updateCharts(this.value);
+      //});
       
       // Affichage initial avec le premier bassin
       updateCharts(basinNames[0]);

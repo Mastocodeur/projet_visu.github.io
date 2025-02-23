@@ -12,10 +12,6 @@ Le thème cette année est sur l'eau.
 Il a fallu dans un premier temps trouvé un jeu de données, puis dans un second temps proposer une visualisation de ce jeu de données. 
 
 
-
-
-
-
 ## Les outils
 
 Pour réaliser ce projet et pouvoir le partager nous avons principalement utilisé deux outils : 
@@ -26,6 +22,8 @@ Pour réaliser ce projet et pouvoir le partager nous avons principalement utilis
 ### Live Server
 
 Super outil de VSCode qui nous a permis de visualiser en direct notre site avant de le push sur github.
+
+Avec un simple clic droit sur le code html, puis en cliquant sur "Open with Live Server" il est possible de visualiser notre travail localement.
 
 ![LiveServer](images/live_server.jpg)
 

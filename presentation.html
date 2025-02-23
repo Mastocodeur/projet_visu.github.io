@@ -11,7 +11,7 @@
       font-family: 'Poppins', sans-serif;
       margin: 0;
       padding: 0;
-      background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+      background: linear-gradient(to bottom, #1c7180, #a2d9ce);
       color: white;
       text-align: center;
     }
@@ -19,14 +19,15 @@
       max-width: 800px;
       margin: auto;
       padding: 20px;
-      background: rgba(255, 255, 255, 0.2);
+      background: white;
       border-radius: 15px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       text-align: justify;
+      color: black;
     }
     h1, h2 {
       text-align: center;
-      color: white;
+      color: #1c7180;
     }
     .button-container {
       text-align: center;
@@ -63,7 +64,7 @@
     }
     ul li::before {
       content: '\2022';
-      color: white;
+      color: #1c7180;
       font-weight: bold;
       display: inline-block;
       width: 1em;
@@ -82,24 +83,22 @@
     <h1>Présentation du Projet</h1>
     <h2>1) Jeu de données et problématique</h2>
     <p>
-      Nous avons choisi de traiter la problématique de la rareté de l'eau en comparant les ressources disponibles aux besoins humains.
+      Nous avons choisi de traiter la problématique de la rareté de l'eau dans le monde entier en comparant les ressources disponibles aux besoins humains.
     </p>
     <p>
       Pour cela, nous utilisons un jeu de données créé par l’UNESCO-IHE, associé à la publication 
       <i>"Value of Water Report: 53: Global Water Scarcity: The Monthly Blue Water Footprint Compared to Blue Water Availability for the World’s Major River Basins"</i>
-      disponible sur le site : <a href="https://waterfootprint.org/publications" target="_blank" style="color: white; text-decoration: underline;">waterfootprint.org/publications</a>.
+      disponible sur le site : <a href="https://waterfootprint.org/publications" target="_blank" style="color: #1c7180; text-decoration: underline;">waterfootprint.org/publications</a>.
     </p>
-    <p>
-      Le jeu de données original est un fichier .dbf, associé à un fichier .shp pour les données géographiques. Il contient, pour chaque mois, 
-      les valeurs de rareté de l’eau bleue, accompagnées des données nécessaires à leur calcul, à savoir :
-    </p>
+    <h2>2) Contenu des fichiers de données</h2>
     <ul>
-      <li><strong>Disponibilité de l’eau bleue</strong> (Blue water availability) = Débit naturel – Exigences en flux environnementaux</li>
-      <li><strong>Rareté de l’eau bleue</strong> (Blue water scarcity) = Empreinte de l’eau bleue / Disponibilité de l’eau bleue, où l’empreinte représente la consommation humaine d’eau.</li>
+      <li><strong>map.geojson :</strong> Ce fichier GeoJSON contient des données géographiques représentant les bassins versants étudiés. Il inclut des polygones définissant les limites de chaque bassin ainsi que des propriétés associées, telles que les valeurs de drainage et d'écoulement moyen.</li>
+      <li><strong>blue_water_availability.csv :</strong> Ce fichier contient des données sur la disponibilité de l'eau bleue pour différents bassins versants. Chaque ligne représente un bassin et fournit les volumes d'eau disponibles pour chaque mois de l'année.</li>
+      <li><strong>blue_water_footprint.csv :</strong> Ce fichier répertorie l'empreinte de l'eau bleue, c'est-à-dire la consommation d'eau par les activités humaines pour chaque bassin versant. Il contient les valeurs mensuelles de consommation en mètres cubes.</li>
+      <li><strong>natural_runoff.csv :</strong> Ce fichier contient les données du débit naturel des cours d'eau pour chaque bassin. Il indique les volumes d'eau écoulés mensuellement, sans intervention humaine.</li>
+      <li><strong>scarcity_csv.csv :</strong> Ce fichier présente les indices de rareté de l'eau bleue pour chaque bassin versant. Il compare la consommation humaine à la disponibilité naturelle pour calculer des niveaux de pénurie mensuels.</li>
+      <li><strong>wiki_link_bassin.csv :</strong> Ce fichier associe chaque bassin versant à une page Wikipédia, offrant une source d'information supplémentaire sur leurs caractéristiques hydrologiques et géographiques.</li>
     </ul>
-    <p>
-      Pour simplifier l’exploration des données et en attendant le cours sur l’affichage des données géographiques, nous travaillons ici avec un fichier .csv.
-    </p>
   </div>
 </body>
 </html>

@@ -3,21 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>Barissin</title>
-  <link rel="icon" type="image/jpeg" href="images/logo_eau.jpg">
+  <link rel="icon" type="image/jpeg" href="logo_eau.jpg">
   <script src="https://unpkg.com/d3@7"></script>
-  <!-- N'oubliez pas d'inclure Turf si besoin -->
   <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
   <style>
+    /* --------------------- Styles pour la barre de navigation (dashboard) --------------------- */
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap');
-    
-    body {
-      font-family: 'Poppins', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #3a7bd5, #00d2ff);
-      color: white;
-      text-align: center;
-    }
     .button-container {
       text-align: center;
       margin-bottom: 20px;
@@ -47,48 +38,93 @@
       color: white;
       cursor: default;
     }
+    /* --------------------- Styles issus de index.html --------------------- */
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: linear-gradient(to bottom, #1c7180, #a2d9ce);
+      padding: 20px;
+    }
+    header h1 {
+      margin: 0;
+      text-align: center;
+      color: white;
+    }
+    #wiki-link {
+      text-align: center;
+      margin-bottom: 20px;
+    }
     #global-container {
       display: flex;
       flex-direction: row;
       width: 100%;
-      height: 100vh;
+      height: 100vh; /* occupe toute la hauteur de la fenêtre */
     }
     #left-container {
       flex: 2;
-      background-color: rgba(255, 255, 255, 0.2);
+      background-color: #f5f5f5;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 15px;
-      padding: 10px;
     }
     #right-container {
       flex: 1;
       padding: 20px;
       overflow-y: auto;
     }
+    #selector-container {
+      text-align: center;
+      margin: 20px 0;
+    }
     .chart-container {
       margin: 20px auto;
       position: relative;
     }
+    .chart-container svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .info-box {
+      position: absolute;
+      background: white;
+      border: 1px solid black;
+      padding: 10px;
+      z-index: 10;
+    }
+    .chart-title {
+      background: linear-gradient(to bottom, #28a2b7, #a2d9ce);
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
   </style>
 </head>
 <body>
-  <h1 style="text-align:center">Rareté et pénurie de l'eau bleue</h1>
-  <body>
-    <div class="button-container">
+  <!-- En-tête issu d'index.html -->
+  <header>
+    <h1>Rareté et pénurie de l'eau bleue</h1>
+  </header>
+  <!-- Barre de navigation (dashboard) -->
+  <div class="button-container">
       <a href="index.html" class="button">Accueil</a>
       <a href="presentation.html" class="button">Présentation du Projet</a>
       <a href="dashboard.html" class="button active">Dashboard</a>
-    </div>
-  
-  <!-- Nouveau conteneur pour le lien Wikipédia -->
-  <div id="wiki-link" style="text-align:center; margin-bottom:20px;"></div>
+  </div>
+  <!-- Conteneur pour le lien Wikipédia -->
+  <div id="wiki-link"></div>
+  <!-- Conteneur global (mise en page à deux colonnes) -->
   <div id="global-container">
-    <!-- Partie gauche  -->
+    <!-- Partie gauche : la carte -->
     <div id="left-container"></div>
-    <!-- Partie droite : Les graphiques -->
-      <div id="right-container">
+    <!-- Partie droite : les graphiques -->
+    <div id="right-container">
       <!-- Graphique Chart6 -->
       <div id="chart6-container" class="chart-container"></div>
       <!-- Graphique Chart7 -->
@@ -98,48 +134,30 @@
     </div>
   </div>
 
-  <!-- Script pour insérer le graphique dans la partie gauche -->
+  <!-- Script pour la carte (issu d'index.html) -->
   <script type="module">
-    // Pour émuler la fonction 'html' d'Observable (très simple)
+    // Fonction html pour simuler Observable
     const html = (strings, ...values) => {
       const template = document.createElement("template");
       template.innerHTML = String.raw({ raw: strings }, ...values);
       return template.content.firstElementChild;
     };
 
-    // Votre graphique Observable, adapté pour le web classique
     async function createMap10() {
       const width = 960, height = 500;
-      
-      // Créer le conteneur qui regroupe le menu déroulant et la carte
       const container = html`
         <div style="width: ${width}px;">
-          <!-- Menu déroulant pour sélectionner une zone -->
-          <select id="drainage-select" style="
-              width: ${width}px;
-              height: 40px;
-              font-size: 16px;
-              margin-bottom: 5px;
-          ">
+          <select id="drainage-select" style="width: ${width}px; height: 40px; font-size: 16px; margin-bottom: 5px;">
             <option value="all">-- SELECT ALL --</option>
           </select>
-          <!-- La carte (SVG) -->
           <svg width="${width}" height="${height}"></svg>
         </div>
       `;
-      
       const selectEl = container.querySelector("#drainage-select");
       const svg = d3.select(container).select("svg");
-      
-      // Charger la carte du monde et vos données
       const world = await d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson");
-      // Remplacez FileAttachment par un fetch si nécessaire ou fournissez le fichier localement
       const geoData = await d3.json("data/map.geojson");
-      
-      // Correction d’orientation des polygones avec Turf
       geoData.features = geoData.features.map(f => turf.rewind(f, { reverse: true }));
-      
-      // Calculer les zones distinctes (DRAINAGE) et les trier
       const drainageZones = Array.from(new Set(geoData.features.map(d => d.properties.DRAINAGE))).sort();
       drainageZones.forEach(zone => {
         const option = document.createElement("option");
@@ -147,19 +165,10 @@
         option.textContent = zone;
         selectEl.appendChild(option);
       });
-      
-      // Combiner les données pour ajuster la projection
-      const combined = {
-        type: "FeatureCollection",
-        features: [...world.features, ...geoData.features]
-      };
-      
-      // Définir la projection Natural Earth et ajuster sa taille
+      const combined = { type: "FeatureCollection", features: [...world.features, ...geoData.features] };
       const projection = d3.geoNaturalEarth1();
       projection.fitSize([width, height], combined);
       const path = d3.geoPath().projection(projection);
-      
-      // Dessiner le fond de carte
       const gBackground = svg.append("g").attr("class", "background-map");
       gBackground.selectAll("path")
         .data(world.features)
@@ -168,15 +177,10 @@
         .attr("fill", "#eeeeee")
         .attr("stroke", "#999999")
         .attr("stroke-width", 0.5);
-      
-      // Échelle de couleur pour vos données
       const colorScale = d3.scaleQuantize()
         .domain(d3.extent(geoData.features, d => d.properties.Wsavg))
-        .range(["#28a2b7", "#432c39"]);
-      
-      // Groupe pour dessiner les polygones de vos données
+        .range(["#d1d750","#c08826","#a31717"]);
       const gData = svg.append("g").attr("class", "map-layer");
-      
       gData.selectAll("path")
         .data(geoData.features)
         .join("path")
@@ -189,9 +193,8 @@
             gData.selectAll("path")
               .style("opacity", f => f === d ? 1 : 0.2);
           }
-          tooltip
-            .style("visibility", "visible")
-            .text(`Wsavg : ${d.properties.Wsavg}`);
+          tooltip.style("visibility", "visible")
+                 .text(`Wsavg : ${d.properties.Wsavg}`);
         })
         .on("mouseleave", function() {
           if (selectEl.value === "all") {
@@ -204,16 +207,12 @@
           selectEl.value = zone;
           updateSelection(zone);
         });
-      
-      // Ajouter un tooltip dans le SVG
       const tooltip = svg.append("text")
         .attr("class", "tooltip")
         .style("font-family", "sans-serif")
         .style("font-size", "12px")
         .style("pointer-events", "none")
         .style("visibility", "hidden");
-      
-      // Zoom et Pan
       const zoom = d3.zoom()
         .scaleExtent([1, 8])
         .on("zoom", event => {
@@ -221,8 +220,6 @@
           gData.attr("transform", event.transform);
         });
       svg.call(zoom);
-      
-      // Fonction de mise à jour de la sélection
       function updateSelection(selectedZone) {
         if (selectedZone === "all" || selectedZone === "") {
           gData.selectAll("path").style("opacity", 1);
@@ -232,25 +229,20 @@
           updateCharts(selectedZone.replace(/ RIVER/gi, ""));
         }
       }
-      
-      // Mettre à jour la sélection lors du changement dans le menu déroulant
       selectEl.addEventListener("change", function() {
         updateSelection(this.value);
       });
-      
       return container;
     }
-
-    // Appel de la fonction pour créer et insérer la carte dans le left-container
     (async () => {
       const mapContainer = await createMap10();
       const leftContainer = document.getElementById("left-container");
-      leftContainer.innerHTML = ""; // Effacer le contenu existant
+      leftContainer.innerHTML = "";
       leftContainer.appendChild(mapContainer);
     })();
   </script>
 
-  <!-- Script existant pour les autres graphiques (dans le right-container) -->
+  <!-- Script pour les graphiques (issu d'index.html) -->
   <script>
     Promise.all([
       d3.csv("data/blue_water_footprint.csv"),
@@ -259,19 +251,12 @@
       d3.csv("data/scarcity_csv.csv"),
       d3.csv("data/wiki_link_bassin.csv")
     ]).then(function([footprintData, availabilityData, runoffData, scarcityData, wikiDataLoaded]) {
-      wikiData = wikiDataLoaded; // Stocke les données chargées
-      // Extraction de la liste des bassins
+      wikiData = wikiDataLoaded;
       const basinNames = footprintData.map(d => d.basin_name).filter(Boolean);
-      
-      // Création du sélecteur commun
-      const selectorContainer = d3.select("#selector-container");
-      //const basinSelector = selectorContainer.append("select");
-      
       const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
       const width = 800, height = 500;
       const margin = { top: 60, right: 150, bottom: 50, left: 60 };
 
-      // Fonction pour mettre à jour le lien Wikipédia en fonction du bassin
       function updateWikipediaLink(basinName) {
         const wikiContainer = document.getElementById("wiki-link");
         const wikiEntry = wikiData.find(d => d.basin_name.trim().toLowerCase() === basinName.trim().toLowerCase());
@@ -279,44 +264,35 @@
         wikiContainer.innerHTML = `<a href="${url}" target="_blank">Page Wikipedia de ${basinName}</a>`;
       }
       
-      // Fonctions de mise à jour des graphiques (chart6, chart7, chartDiff)
       function updateChart6(basinName) {
         const container = d3.select("#chart6-container");
         container.html("");
-        container.append("h2")
-          .style("text-align", "center")
+        container.append("div")
+          .attr("class", "chart-title")
           .text("Eau bleu");
         const svg = container.append("svg")
           .attr("viewBox", `0 0 ${width} ${height}`)
           .attr("preserveAspectRatio", "xMidYMid meet");
-        
-        const footRow = footprintData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase()
-);
-        const availRow = availabilityData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase()
-);
-        const runRow = runoffData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase()
-);
-        
+        const footRow = footprintData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase());
+        const availRow = availabilityData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase());
+        const runRow = runoffData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase());
         const footprint = months.map(m => (+footRow?.[m] || 0) / 1e3);
         const availability = months.map(m => +availRow?.[m] || 0);
         const runoff = months.map(m => +runRow?.[m] || 0);
         const allValues = footprint.concat(availability, runoff);
         const yMax = d3.max(allValues);
-        
         const x = d3.scalePoint()
           .domain(months)
           .range([margin.left, width - margin.right - 100]);
         const y = d3.scaleLinear()
           .domain([0, yMax]).nice()
           .range([height - margin.bottom, margin.top]);
-        
         svg.append("g")
           .attr("transform", `translate(0,${height - margin.bottom})`)
           .call(d3.axisBottom(x));
         svg.append("g")
           .attr("transform", `translate(${margin.left},0)`)
           .call(d3.axisLeft(y));
-        
         const legend = svg.append("g")
           .attr("transform", `translate(${width - margin.right + 10},50)`);
         const colors = { footprint: "steelblue", availability: "green", runoff: "orange" };
@@ -333,25 +309,21 @@
             .attr("font-size", "12px")
             .text(key.charAt(0).toUpperCase() + key.slice(1));
         });
-        
         const line = d3.line()
           .x((d, i) => x(months[i]))
           .y(d => y(d));
-        
         svg.append("path")
           .datum(footprint)
           .attr("fill", "none")
           .attr("stroke", colors.footprint)
           .attr("stroke-width", 2)
           .attr("d", line);
-        
         svg.append("path")
           .datum(availability)
           .attr("fill", "none")
           .attr("stroke", colors.availability)
           .attr("stroke-width", 2)
           .attr("d", line);
-        
         svg.append("path")
           .datum(runoff)
           .attr("fill", "none")
@@ -363,49 +335,41 @@
       function updateChart7(basinName) {
         const container = d3.select("#chart7-container");
         container.html("");
-        container.append("h2")
-          .style("text-align", "center")
+        container.append("div")
+          .attr("class", "chart-title")
           .text("Raretée de l'eau bleu au cours de l'année");
         const svg = container.append("svg")
           .attr("viewBox", `0 0 ${width} ${height}`)
           .attr("preserveAspectRatio", "xMidYMid meet");
-        
-        const basinEntry = scarcityData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase()
-);
+        const basinEntry = scarcityData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase());
         const values = months.map(m => parseFloat(basinEntry?.[m]) || 0);
         const population = basinEntry?.population || "N/A";
-        
         container.append("div")
           .attr("class", "info-box")
           .style("left", (width - margin.right) + "px")
           .style("top", "80px")
           .html(`<strong>${basinName}</strong><br>Population: ${population}`);
-        
         const x = d3.scalePoint()
           .domain(months)
           .range([margin.left, width - margin.right - 150]);
         const y = d3.scaleLinear()
           .domain([0, d3.max(values)]).nice()
           .range([height - margin.bottom, margin.top]);
-        
         svg.append("g")
           .attr("transform", `translate(0,${height - margin.bottom})`)
           .call(d3.axisBottom(x));
         svg.append("g")
           .attr("transform", `translate(${margin.left},0)`)
           .call(d3.axisLeft(y));
-        
         const line = d3.line()
           .x((d, i) => x(months[i]))
           .y(d => y(d));
-        
         svg.append("path")
           .datum(values)
           .attr("fill", "none")
           .attr("stroke", "red")
           .attr("stroke-width", 2)
           .attr("d", line);
-        
         svg.selectAll(".point")
           .data(values)
           .enter()
@@ -417,141 +381,109 @@
           .attr("fill", "red");
       }
       
-    function updateChartDiff(basinName) { 
-      const container = d3.select("#chartDiff-container");
-      container.html("");
-      container.append("h2")
-        .style("text-align", "left")
-        .text("Surplus et pénurie");
-      const svg = container.append("svg")
-        .attr("viewBox", `0 0 ${width} ${height}`)
-        .attr("preserveAspectRatio", "xMidYMid meet");
-
-      const footRow = footprintData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase());
-      const availRow = availabilityData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase());
-      const diff = months.map(m => {
-        const footVal = +footRow?.[m] || 0;
-        const availVal = +availRow?.[m] || 0;
-        return availVal - footVal;
-      });
-      
-      // Calcul de la valeur absolue maximale pour centrer zéro
-      const maxAbs = d3.max(diff, d => Math.abs(d));
-      
-      // Définition de l'échelle y avec un domaine symétrique autour de zéro
-      const y = d3.scaleLinear()
-        .domain([-maxAbs, maxAbs])
-        .range([height - margin.bottom, margin.top]);
-        
-      const x = d3.scalePoint()
-        .domain(months)
-        .range([margin.left, width - margin.right - 100]);
-      
-      // Axes
-      svg.append("g")
-        .attr("transform", `translate(0,${height - margin.bottom})`)
-        .call(d3.axisBottom(x))
-        .append("text")
-          .attr("x", (width - margin.left - margin.right) / 2 + margin.left)
-          .attr("y", 35)
-          .attr("text-anchor", "middle")
-          .attr("font-size", "14px")
-          .attr("fill", "black")
-          .text("Disponibilité mensuelle");
-          
-      svg.append("g")
-        .attr("transform", `translate(${margin.left},0)`)
-        .call(d3.axisLeft(y));
-      
-      // Ligne horizontale à y(0)
-      svg.append("line")
-        .attr("x1", margin.left)
-        .attr("x2", width - margin.right)
-        .attr("y1", y(0))
-        .attr("y2", y(0))
-        .attr("stroke", "black")
-        .attr("stroke-width", 1)
-        .attr("stroke-dasharray", "4,2");
-      
-      // Générateur d'aire (de y(0) jusqu'à y(d))
-      const area = d3.area()
-        .x((d, i) => x(months[i]))
-        .y0(y(0))
-        .y1(d => y(d));
-      
-      // Définition des clip paths pour séparer au niveau de y(0)
-      svg.append("clipPath")
-        .attr("id", "clip-above")
-        .append("rect")
-          .attr("x", margin.left)
-          .attr("y", margin.top)
-          .attr("width", width - margin.left - margin.right)
-          .attr("height", y(0) - margin.top);
-          
-      svg.append("clipPath")
-        .attr("id", "clip-below")
-        .append("rect")
-          .attr("x", margin.left)
-          .attr("y", y(0))
-          .attr("width", width - margin.left - margin.right)
-          .attr("height", height - margin.bottom - y(0));
-      
-      // Aire au-dessus de zéro en bleu
-      svg.append("path")
-        .datum(diff)
-        .attr("fill", "blue")
-        .attr("d", area)
-        .attr("clip-path", "url(#clip-above)");
-      
-      // Aire en dessous de zéro en rouge
-      svg.append("path")
-        .datum(diff)
-        .attr("fill", "red")
-        .attr("d", area)
-        .attr("clip-path", "url(#clip-below)");
-      
-      // Ligne du graphique
-      const line = d3.line()
-        .x((d, i) => x(months[i]))
-        .y(d => y(d));
-      
-      svg.append("path")
-        .datum(diff)
-        .attr("fill", "none")
-        .attr("stroke", "black")
-        .attr("stroke-width", 2)
-        .attr("d", line);
-      
-      // (Optionnel) Affichage d'une info-box
-      function areaUnderCurve(values) {
-        let sum = 0;
-        for (let i = 0; i < values.length - 1; i++) {
-          sum += (values[i] + values[i+1]) / 2;
+      function updateChartDiff(basinName) { 
+        const container = d3.select("#chartDiff-container");
+        container.html("");
+        container.append("div")
+          .attr("class", "chart-title")
+          .text("Surplus et pénurie");
+        const svg = container.append("svg")
+          .attr("viewBox", `0 0 ${width} ${height}`)
+          .attr("preserveAspectRatio", "xMidYMid meet");
+        const footRow = footprintData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase());
+        const availRow = availabilityData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase());
+        const diff = months.map(m => {
+          const footVal = +footRow?.[m] || 0;
+          const availVal = +availRow?.[m] || 0;
+          return availVal - footVal;
+        });
+        const maxAbs = d3.max(diff, d => Math.abs(d));
+        const y = d3.scaleLinear()
+          .domain([-maxAbs, maxAbs])
+          .range([height - margin.bottom, margin.top]);
+        const x = d3.scalePoint()
+          .domain(months)
+          .range([margin.left, width - margin.right - 100]);
+        svg.append("g")
+          .attr("transform", `translate(0,${height - margin.bottom})`)
+          .call(d3.axisBottom(x))
+          .append("text")
+            .attr("x", (width - margin.left - margin.right) / 2 + margin.left)
+            .attr("y", 35)
+            .attr("text-anchor", "middle")
+            .attr("font-size", "14px")
+            .attr("fill", "black")
+            .text("Disponibilité mensuelle");
+        svg.append("g")
+          .attr("transform", `translate(${margin.left},0)`)
+          .call(d3.axisLeft(y));
+        svg.append("line")
+          .attr("x1", margin.left)
+          .attr("x2", width - margin.right)
+          .attr("y1", y(0))
+          .attr("y2", y(0))
+          .attr("stroke", "black")
+          .attr("stroke-width", 1)
+          .attr("stroke-dasharray", "4,2");
+        const area = d3.area()
+          .x((d, i) => x(months[i]))
+          .y0(y(0))
+          .y1(d => y(d));
+        svg.append("clipPath")
+          .attr("id", "clip-above")
+          .append("rect")
+            .attr("x", margin.left)
+            .attr("y", margin.top)
+            .attr("width", width - margin.left - margin.right)
+            .attr("height", y(0) - margin.top);
+        svg.append("clipPath")
+          .attr("id", "clip-below")
+          .append("rect")
+            .attr("x", margin.left)
+            .attr("y", y(0))
+            .attr("width", width - margin.left - margin.right)
+            .attr("height", height - margin.bottom - y(0));
+        svg.append("path")
+          .datum(diff)
+          .attr("fill", "blue")
+          .attr("d", area)
+          .attr("clip-path", "url(#clip-above)");
+        svg.append("path")
+          .datum(diff)
+          .attr("fill", "red")
+          .attr("d", area)
+          .attr("clip-path", "url(#clip-below)");
+        const line = d3.line()
+          .x((d, i) => x(months[i]))
+          .y(d => y(d));
+        svg.append("path")
+          .datum(diff)
+          .attr("fill", "none")
+          .attr("stroke", "black")
+          .attr("stroke-width", 2)
+          .attr("d", line);
+        function areaUnderCurve(values) {
+          let sum = 0;
+          for (let i = 0; i < values.length - 1; i++) {
+            sum += (values[i] + values[i+1]) / 2;
+          }
+          return sum;
         }
-        return sum;
+        const approxArea = areaUnderCurve(diff);
+        container.append("div")
+          .attr("class", "info-box")
+          .style("left", (width/2) + "px")
+          .style("top", "10px")
+          .html(`<strong>${basinName}</strong><br>Aire sous la courbe (approx) : ${approxArea.toFixed(2)}`);
       }
-      const approxArea = areaUnderCurve(diff);
       
-      container.append("div")
-        .attr("class", "info-box")
-        .style("left", (width/2) + "px")
-        .style("top", "10px")
-        .html(`<strong>${basinName}</strong><br>Aire sous la courbe (approx) : ${approxArea.toFixed(2)}`);
-    }
-
-
       function updateCharts(basinName) {
         updateChart6(basinName);
         updateChart7(basinName);
         updateChartDiff(basinName);
         updateWikipediaLink(basinName);
         window.updateCharts = updateCharts;
-
       }
-      
-      //basinSelector.on("change", function() {
-      //  updateCharts(this.value);
-      //});
       
       // Affichage initial avec le premier bassin
       updateCharts(basinNames[0]);

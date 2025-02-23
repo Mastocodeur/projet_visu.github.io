@@ -27,6 +27,10 @@ Avec un simple clic droit sur le code html, puis en cliquant sur "Open with Live
 
 ![LiveServer](images/live_server.jpg)
 
+## Notre visualisation
+
+Vous pouvez accéder à notre visualisation en cliquant sur ce lien  :https://mastocodeur.github.io/projet_visu.github.io/
+
 
 
 ## Sources 

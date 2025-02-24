@@ -89,8 +89,24 @@
       Pour cela, nous utilisons un jeu de données créé par l’UNESCO-IHE, associé à la publication 
       <i>"Value of Water Report: 53: Global Water Scarcity: The Monthly Blue Water Footprint Compared to Blue Water Availability for the World’s Major River Basins"</i>
       disponible sur le site : <a href="https://waterfootprint.org/publications" target="_blank" style="color: #1c7180; text-decoration: underline;">waterfootprint.org/publications</a>.
+
+    </p>
+    <p>
+      Ce jeu de données contient des informations sur la disponibilité de l'eau bleue, l'empreinte de l'eau bleue, le débit naturel des cours d'eau et l'indice de rareté de l'eau bleue pour différents bassins versants à travers le monde.
+    </p>
+    <p>
+      Notre objectif est de visualiser ces données géographiquement et de les analyser pour identifier les zones les plus touchées par la rareté de l'eau.
+    </p>
+    <p>
+      Nous avons créé un tableau de bord interactif permettant d'explorer les données et de comparer les différents bassins versants en termes de disponibilité et de consommation d'eau.
+    </p>
+    <p>
+      Ce tableau de bord offre des visualisations graphiques, telles que des cartes, des graphiques et des tableaux, pour faciliter la compréhension des données et la prise de décision.
     </p>
     <h2>2) Contenu des fichiers de données</h2>
+    <p>
+      Les fichiers de données fournis pour ce projet comprennent les éléments suivants :  
+    </p>
     <ul>
       <li><strong>map.geojson :</strong> Ce fichier GeoJSON contient des données géographiques représentant les bassins versants étudiés. Il inclut des polygones définissant les limites de chaque bassin ainsi que des propriétés associées, telles que les valeurs de drainage et d'écoulement moyen.</li>
       <li><strong>blue_water_availability.csv :</strong> Ce fichier contient des données sur la disponibilité de l'eau bleue pour différents bassins versants. Chaque ligne représente un bassin et fournit les volumes d'eau disponibles pour chaque mois de l'année.</li>
@@ -99,6 +115,14 @@
       <li><strong>scarcity_csv.csv :</strong> Ce fichier présente les indices de rareté de l'eau bleue pour chaque bassin versant. Il compare la consommation humaine à la disponibilité naturelle pour calculer des niveaux de pénurie mensuels.</li>
       <li><strong>wiki_link_bassin.csv :</strong> Ce fichier associe chaque bassin versant à une page Wikipédia, offrant une source d'information supplémentaire sur leurs caractéristiques hydrologiques et géographiques.</li>
     </ul>
+    <p>
+      Le jeu de données original est un fichier .dbf, associé à un fichier .shp pour les données géographiques. Il contient, pour chaque mois, les valeurs de rareté de l'eau bleue, accompagnées des données nécessaires à leur calcul, à savoir :
+      <ul>
+        <li>Disponibilité de l'eau bleue (Blue water availability) = Débit naturel - Exigences en flux environnementaux</li>
+        <li>Rareté de l'eau bleue (Blue water scarcity) = Empreinte de l'eau bleue / Disponibilité de l'eau bleue, où l'empreinte représente la consommation humaine d'eau</li>
+      </ul>
+      
+    </p>
   </div>
 </body>
 </html>

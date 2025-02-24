@@ -470,7 +470,7 @@
         const footRow = footprintData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase());
         const availRow = availabilityData.find(d => d.basin_name.toLowerCase() === basinName.toLowerCase());
         const diff = months.map(m => {
-          const footVal = +footRow?.[m] || 0;
+          const footVal = +footRow?.[m] / 1e3 || 0;
           const availVal = +availRow?.[m] || 0;
           return availVal - footVal;
         });

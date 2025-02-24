@@ -220,6 +220,12 @@
           gData.attr("transform", event.transform);
         });
       svg.call(zoom);
+      svg.node().addEventListener("click", function(event) {
+        if (event.target.tagName.toLowerCase() === "svg") {
+          selectEl.value = "all";
+          updateSelection("all");
+        }
+      });
       function updateSelection(selectedZone) {
         if (selectedZone === "all" || selectedZone === "") {
           gData.selectAll("path").style("opacity", 1);

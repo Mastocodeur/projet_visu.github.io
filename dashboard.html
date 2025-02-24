@@ -109,7 +109,7 @@
 <body>
   <!-- En-tête issu d'index.html -->
   <header>
-    <h1>Rareté et pénurie de l'eau bleue</h1>
+    <h1>Surplus et pénurie d'eau bleue</h1>
   </header>
   <!-- Barre de navigation (dashboard) -->
   <div class="button-container">
@@ -392,7 +392,7 @@
           .attr("dy", "1em")
           .style("text-anchor", "middle")
           .style("font-size", "12px")
-          .text("empreinte/disponibilité (%)");
+          .text("empreinte / disponibilité (%)");
         svg.selectAll(".point")
           .data(values)
           .enter()
@@ -409,7 +409,7 @@
         container.html("");
         container.append("div")
           .attr("class", "chart-title")
-          .text("Disponibilité de l’eau bleue");
+          .text("Surplus et pénurie d'eau bleue");
         const svg = container.append("svg")
           .attr("viewBox", `0 0 ${width} ${height}`)
           .attr("preserveAspectRatio", "xMidYMid meet");

@@ -255,7 +255,7 @@
       const basinNames = footprintData.map(d => d.basin_name).filter(Boolean);
       const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
       const width = 800, height = 500;
-      const margin = { top: 60, right: 150, bottom: 50, left: 60 };
+      const margin = { top: 60, right: 150, bottom: 50, left: 100 };
   
       function updateWikipediaLink(basinName) {
         const wikiContainer = document.getElementById("wiki-link");
@@ -282,7 +282,7 @@
         const allValues = footprint.concat(availability, runoff);
         const yMax = d3.max(allValues);
 
-        const marginGraphRessources = { top: 60, right: 150, bottom: 50, left: 120 };
+        const marginGraphRessources = { top: 60, right: 150, bottom: 50, left: 100 };
         const x = d3.scalePoint()
           .domain(months)
           .range([marginGraphRessources.left, width - marginGraphRessources.right - 100]);
@@ -300,7 +300,7 @@
         
         svg.append("text")
           .attr("transform", "rotate(-90)")
-          .attr("y", marginGraphRessources.left - 80)
+          .attr("y", marginGraphRessources.left - 60)
           .attr("x", -height/2)
           .attr("dy", "1em")
           .style("text-anchor", "middle")
@@ -384,6 +384,15 @@
           .attr("stroke", "red")
           .attr("stroke-width", 2)
           .attr("d", line);
+
+        svg.append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", margin.left - 60)
+          .attr("x", -height/2)
+          .attr("dy", "1em")
+          .style("text-anchor", "middle")
+          .style("font-size", "12px")
+          .text("empreinte/disponibilité (%)");
         svg.selectAll(".point")
           .data(values)
           .enter()

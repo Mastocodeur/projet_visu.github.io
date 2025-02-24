@@ -232,7 +232,61 @@
       selectEl.addEventListener("change", function() {
         updateSelection(this.value);
       });
+
+      // Ajout de l'échelle des couleurs
+      function addColorLegend(svg, colorScale, width, height) {
+        const legendWidth = 150, legendHeight = 12;
+        const legendMargin = { top: 10, right: 10, bottom: 20, left: 10 };
+        
+        const legendGroup = svg.append("g")
+          .attr("transform", `translate(${width - legendWidth - legendMargin.right}, ${height - legendHeight - legendMargin.bottom})`);
+        
+        const legendScale = d3.scaleLinear()
+          .domain(colorScale.domain())
+          .range([0, legendWidth]);
+
+        const legendAxis = d3.axisBottom(legendScale)
+          .tickSize(4)
+          .ticks(3);
+
+        const defs = svg.append("defs");
+        const linearGradient = defs.append("linearGradient")
+          .attr("id", "legend-gradient")
+          .attr("x1", "0%")
+          .attr("y1", "0%")
+          .attr("x2", "100%")
+          .attr("y2", "0%");
+
+        colorScale.range().forEach((color, i) => {
+          linearGradient.append("stop")
+            .attr("offset", `${(i / (colorScale.range().length - 1)) * 100}%`)
+            .attr("stop-color", color);
+        });
+
+        legendGroup.append("rect")
+          .attr("width", legendWidth)
+          .attr("height", legendHeight)
+          .style("fill", "url(#legend-gradient)")
+          .style("stroke", "black")
+          .style("stroke-width", 0.5);
+
+        legendGroup.append("g")
+          .attr("transform", `translate(0, ${legendHeight})`)
+          .call(legendAxis)
+          .select(".domain")
+          .remove();
+      }
+
+      // Ajout de l'échelle après avoir défini colorScale
+      addColorLegend(svg, colorScale, width, height);
+
+
+
       return container;
+
+      
+
+
     }
     (async () => {
       const mapContainer = await createMap10();

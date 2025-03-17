@@ -185,7 +185,7 @@
         const population = basinEntry?.population || "N/A";
         container.append("div")
           .attr("class", "info-box")
-          .style("left", (width - margin.right) + "px")
+          .style("left", (width - margin.right-360) + "px")
           .style("top", "80px")
           .html(`<strong>${basinName}</strong><br>Population: ${population}`);
         const x = d3.scalePoint()

@@ -190,7 +190,7 @@
           .html(`<strong>${basinName}</strong><br>Population: ${population}`);
         const x = d3.scalePoint()
           .domain(months)
-          .range([margin.left, width - margin.right - 150]);
+          .range([margin.left, width - margin.right - 360]);
         const y = d3.scaleLinear()
           .domain([0, d3.max(values)]).nice()
           .range([height - margin.bottom, margin.top]);

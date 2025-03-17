@@ -1,111 +1,15 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <title>Barissin</title>
   <link rel="icon" type="image/jpeg" href="images/logo_eau.jpg">
   <script src="https://unpkg.com/d3@7"></script>
   <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
-  <style>
-    /* --------------------- Styles pour la barre de navigation (dashboard) --------------------- */
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap');
-    .button-container {
-      text-align: center;
-      margin-bottom: 20px;
-      padding: 20px;
-    }
-    .button {
-      background-color: white;
-      color: #007BFF;
-      padding: 12px 25px;
-      margin: 5px;
-      border: none;
-      cursor: pointer;
-      font-size: 18px;
-      font-weight: bold;
-      border-radius: 25px;
-      text-decoration: none;
-      display: inline-block;
-      transition: all 0.3s ease-in-out;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    }
-    .button:hover {
-      background-color: #007BFF;
-      color: white;
-    }
-    .button.active {
-      background-color: #0056b3;
-      color: white;
-      cursor: default;
-    }
-    /* --------------------- Styles issus de index.html --------------------- */
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background: linear-gradient(to bottom, #1c7180, #a2d9ce);
-      padding: 20px;
-    }
-    header h1 {
-      margin: 0;
-      text-align: center;
-      color: white;
-    }
-    #wiki-link {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    #global-container {
-      display: flex;
-      flex-direction: row;
-      width: 100%;
-      height: 100vh; /* occupe toute la hauteur de la fenêtre */
-    }
-    #left-container {
-      flex: 2;
-      background-color: #f5f5f5;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #right-container {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-    }
-    #selector-container {
-      text-align: center;
-      margin: 20px 0;
-    }
-    .chart-container {
-      margin: 20px auto;
-      position: relative;
-    }
-    .chart-container svg {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-    .info-box {
-      position: absolute;
-      background: white;
-      border: 1px solid black;
-      padding: 10px;
-      z-index: 10;
-    }
-    .chart-title {
-      background: linear-gradient(to bottom, #28a2b7, #a2d9ce);
-      color: white;
-      padding: 10px;
-      border-radius: 8px;
-      text-align: center;
-      margin-bottom: 10px;
-      font-size: 1.2em;
-    }
-  </style>
+  <link rel="stylesheet" href="assets/dashboard.css">
 </head>
+
 <body>
   <!-- En-tête issu d'index.html -->
   <header>
@@ -134,173 +38,32 @@
     </div>
   </div>
 
+  <script>
+    window.updateCharts = function(basinName) {
+        // Cette fonction sera redéfinie plus tard
+        console.log("updateCharts called with:", basinName);
+    };
+  </script>
+
   <!-- Script pour la carte (issu d'index.html) -->
   <script type="module">
-    // Fonction html pour simuler Observable
     const html = (strings, ...values) => {
-      const template = document.createElement("template");
-      template.innerHTML = String.raw({ raw: strings }, ...values);
-      return template.content.firstElementChild;
+        const template = document.createElement("template");
+        template.innerHTML = String.raw({ raw: strings }, ...values);
+        return template.content.firstElementChild;
     };
+    window.html = html; // Rendre html disponible globalement
 
-    async function createMap10() {
-      const width = 960, height = 500;
-      const container = html`
-        <div style="width: ${width}px;">
-          <select id="drainage-select" style="width: ${width}px; height: 40px; font-size: 16px; margin-bottom: 5px;">
-            <option value="all">-- SELECT ALL --</option>
-          </select>
-          <svg width="${width}" height="${height}"></svg>
-        </div>
-      `;
-      const selectEl = container.querySelector("#drainage-select");
-      const svg = d3.select(container).select("svg");
-      const world = await d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson");
-      const geoData = await d3.json("data/map.geojson");
-      geoData.features = geoData.features.map(f => turf.rewind(f, { reverse: true }));
-      const drainageZones = Array.from(new Set(geoData.features.map(d => d.properties.DRAINAGE))).sort();
-      drainageZones.forEach(zone => {
-        const option = document.createElement("option");
-        option.value = zone;
-        option.textContent = zone;
-        selectEl.appendChild(option);
-      });
-      const combined = { type: "FeatureCollection", features: [...world.features, ...geoData.features] };
-      const projection = d3.geoNaturalEarth1();
-      projection.fitSize([width, height], combined);
-      const path = d3.geoPath().projection(projection);
-      const gBackground = svg.append("g").attr("class", "background-map");
-      gBackground.selectAll("path")
-        .data(world.features)
-        .join("path")
-        .attr("d", path)
-        .attr("fill", "#eeeeee")
-        .attr("stroke", "#999999")
-        .attr("stroke-width", 0.5);
-      const colorScale = d3.scaleQuantize()
-        .domain(d3.extent(geoData.features, d => d.properties.Wsavg))
-        .range(["#d1d750","#c08826","#a31717"]);
-      const gData = svg.append("g").attr("class", "map-layer");
-      gData.selectAll("path")
-        .data(geoData.features)
-        .join("path")
-        .attr("d", path)
-        .attr("fill", d => colorScale(d.properties.Wsavg || 0))
-        .attr("stroke", "black")
-        .attr("stroke-width", 0.5)
-        .on("mouseenter", function(event, d) {
-          if (selectEl.value === "all") {
-            gData.selectAll("path")
-              .style("opacity", f => f === d ? 1 : 0.2);
-          }
-          tooltip.style("visibility", "visible")
-                 .text(`Wsavg : ${d.properties.Wsavg}`);
-        })
-        .on("mouseleave", function() {
-          if (selectEl.value === "all") {
-            gData.selectAll("path").style("opacity", 1);
-          }
-          tooltip.style("visibility", "hidden");
-        })
-        .on("click", function(event, d) {
-          const zone = d.properties.DRAINAGE || "all";
-          selectEl.value = zone;
-          updateSelection(zone);
-        });
-      const tooltip = svg.append("text")
-        .attr("class", "tooltip")
-        .style("font-family", "sans-serif")
-        .style("font-size", "12px")
-        .style("pointer-events", "none")
-        .style("visibility", "hidden");
-      const zoom = d3.zoom()
-        .scaleExtent([1, 8])
-        .on("zoom", event => {
-          gBackground.attr("transform", event.transform);
-          gData.attr("transform", event.transform);
-        });
-      svg.call(zoom);
-      svg.node().addEventListener("click", function(event) {
-        if (event.target.tagName.toLowerCase() === "svg") {
-          selectEl.value = "all";
-          updateSelection("all");
-        }
-      });
-      function updateSelection(selectedZone) {
-        if (selectedZone === "all" || selectedZone === "") {
-          gData.selectAll("path").style("opacity", 1);
-        } else {
-          gData.selectAll("path")
-            .style("opacity", d => d.properties.DRAINAGE === selectedZone ? 1 : 0.2);
-          updateCharts(selectedZone.replace(/ RIVER/gi, ""));
-        }
-      }
-      selectEl.addEventListener("change", function() {
-        updateSelection(this.value);
-      });
-
-      // Ajout de l'échelle des couleurs
-      function addColorLegend(svg, colorScale, width, height) {
-        const legendWidth = 150, legendHeight = 12;
-        const legendMargin = { top: 10, right: 10, bottom: 20, left: 10 };
-        
-        const legendGroup = svg.append("g")
-          .attr("transform", `translate(${width - legendWidth - legendMargin.right}, ${height - legendHeight - legendMargin.bottom})`);
-        
-        const legendScale = d3.scaleLinear()
-          .domain(colorScale.domain())
-          .range([0, legendWidth]);
-
-        const legendAxis = d3.axisBottom(legendScale)
-          .tickSize(4)
-          .ticks(3);
-
-        const defs = svg.append("defs");
-        const linearGradient = defs.append("linearGradient")
-          .attr("id", "legend-gradient")
-          .attr("x1", "0%")
-          .attr("y1", "0%")
-          .attr("x2", "100%")
-          .attr("y2", "0%");
-
-        colorScale.range().forEach((color, i) => {
-          linearGradient.append("stop")
-            .attr("offset", `${(i / (colorScale.range().length - 1)) * 100}%`)
-            .attr("stop-color", color);
-        });
-
-        legendGroup.append("rect")
-          .attr("width", legendWidth)
-          .attr("height", legendHeight)
-          .style("fill", "url(#legend-gradient)")
-          .style("stroke", "black")
-          .style("stroke-width", 0.5);
-
-        legendGroup.append("g")
-          .attr("transform", `translate(0, ${legendHeight})`)
-          .call(legendAxis)
-          .select(".domain")
-          .remove();
-      }
-
-      // Ajout de l'échelle après avoir défini colorScale
-      addColorLegend(svg, colorScale, width, height);
-
-
-
-      return container;
-
-      
-
-
-    }
+    import { createMap } from './widgets/createMap.js';
+    
     (async () => {
-      const mapContainer = await createMap10();
-      const leftContainer = document.getElementById("left-container");
-      leftContainer.innerHTML = "";
-      leftContainer.appendChild(mapContainer);
+        const mapContainer = await createMap();
+        const leftContainer = document.getElementById("left-container");
+        leftContainer.innerHTML = "";
+        leftContainer.appendChild(mapContainer);
     })();
   </script>
+  
 
   <!-- Script pour les graphiques (issu d'index.html) -->
   <script>
@@ -317,6 +80,8 @@
       const width = 800, height = 500;
       const margin = { top: 60, right: 150, bottom: 50, left: 100 };
   
+
+
       function updateWikipediaLink(basinName) {
         const wikiContainer = document.getElementById("wiki-link");
         const wikiEntry = wikiData.find(d => d.basin_name.trim().toLowerCase() === basinName.trim().toLowerCase());

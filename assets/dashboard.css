@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap');
+.button-container {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 20px;
+}
+.button {
+  background-color: white;
+  color: #007BFF;
+  padding: 12px 25px;
+  margin: 5px;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 25px;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+.button:hover {
+  background-color: #007BFF;
+  color: white;
+}
+.button.active {
+  background-color: #0056b3;
+  color: white;
+  cursor: default;
+}
+/* --------------------- Styles issus de index.html --------------------- */
+body {
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+}
+header {
+  background: linear-gradient(to bottom, #1c7180, #a2d9ce);
+  padding: 20px;
+}
+header h1 {
+  margin: 0;
+  text-align: center;
+  color: white;
+}
+#wiki-link {
+  text-align: center;
+  margin-bottom: 20px;
+}
+#global-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100vh; /* occupe toute la hauteur de la fenêtre */
+}
+#left-container {
+  flex: 2;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#right-container {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+#selector-container {
+  text-align: center;
+  margin: 20px 0;
+}
+.chart-container {
+  margin: 20px auto;
+  position: relative;
+}
+.chart-container svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.info-box {
+  position: absolute;
+  background: white;
+  border: 1px solid black;
+  padding: 10px;
+  z-index: 10;
+}
+.chart-title {
+  background: linear-gradient(to bottom, #28a2b7, #a2d9ce);
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+}
